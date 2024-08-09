@@ -28,7 +28,7 @@ export class UsuarioService {
   public async findAll(nombre?: String, rol?: RolEnum, email?: String): Promise<Array<Usuario>> {
     // Construir el objeto de filtro dinámicamente y eliminar propiedades undefined
     // se construyen los filtros de los usuarios
-    const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(undefined, { $regex: nombre.toString(), $options: 'i' }, email, rol)
+    const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(undefined, nombre ? { $regex: nombre.toString(), $options: 'i' } : undefined, email, rol)
     Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]); // se eliminan los valores undefined de los filtros
 
     return await this.usuariosModel.find(filters).exec();
@@ -37,7 +37,7 @@ export class UsuarioService {
   public async findOne(id: number, nombre?: String, rol?: RolEnum, email?: String): Promise<Usuario> {
     // Construir el objeto de filtro dinámicamente y eliminar propiedades undefined
     // se construyen los filtros de los usuarios
-    const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(id, { $regex: nombre.toString(), $options: 'i' }, email, rol)
+    const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(id, nombre ? { $regex: nombre.toString(), $options: 'i' } : undefined, email, rol)
     Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]); // se eliminan los valores undefined de los filtros
 
     return await this.usuariosModel.findOne(filters).exec()
