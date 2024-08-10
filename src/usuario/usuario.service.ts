@@ -22,7 +22,7 @@ export class UsuarioService {
     if (await this.findOne(undefined, createUsuarioDto.nombreUsuario))
       throw new HttpException("Ya el nombre usuario está siendo usado", HttpStatus.BAD_REQUEST)
 
-    return await usuario.save() // se almacena al usuario en la base de datos
+     await usuario.save() // se almacena al usuario en la base de datos
   }
 
   public async findAll(nombre?: String, rol?: RolEnum, email?: String): Promise<Array<Usuario>> {

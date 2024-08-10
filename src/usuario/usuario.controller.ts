@@ -3,7 +3,7 @@ import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 
-import { MessagePattern } from '@nestjs/microservices';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { FiltersUsuarioDTO } from './dto/filters-usuario.dto';
 
 
@@ -13,29 +13,66 @@ export class UsuarioController {
 
   @MessagePattern('createUsuario')
   public async create(createUsuarioDto: CreateUsuarioDto) {
-    return await this.usuarioService.create(createUsuarioDto);
+    try {
+      await this.usuarioService.create(createUsuarioDto);
+      return { success: true }
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
   }
 
   @UseInterceptors(ClassSerializerInterceptor) // se indica que se usan interceptores para personalizar la serialización del objeto de retorno del método
   @MessagePattern('getAllUsers')
   public async findAll(filtersUsuariosDTO: FiltersUsuarioDTO) {
-    // con el request luego se registra una traza de auditoria
-    return await this.usuarioService.findAll(typeof filtersUsuariosDTO.nombreUsuario === 'string' ? filtersUsuariosDTO.nombreUsuario : undefined,
-      filtersUsuariosDTO.rol);
+    try {
+      return await this.usuarioService.findAll(typeof filtersUsuariosDTO.nombreUsuario === 'string' ? filtersUsuariosDTO.nombreUsuario : undefined,
+        filtersUsuariosDTO.rol)
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
   }
 
   @MessagePattern('getUsuario')
   public async findOne(id: number) {
-    return await this.usuarioService.findOne(id);
+    try {
+      return await this.usuarioService.findOne(id);
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
   }
 
   @MessagePattern('updateUser')
   public async update(paylodad: { id: number, updateUsuarioDto: UpdateUsuarioDto }) {
-    return await this.usuarioService.update(paylodad.id, paylodad.updateUsuarioDto);
+    try {
+      await this.usuarioService.update(paylodad.id, paylodad.updateUsuarioDto)
+      return { success: true }
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
   }
 
   @MessagePattern('deleteUser')
   public async delete(id: number) {
-    return await this.usuarioService.delete(id)
+    try {
+      await this.usuarioService.delete(id)
+      return { success: true }
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
   }
 }
