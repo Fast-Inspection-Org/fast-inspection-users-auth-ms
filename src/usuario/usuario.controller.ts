@@ -29,7 +29,7 @@ export class UsuarioController {
   public async findAll(filtersUsuariosDTO: FiltersUsuarioDTO) {
     try {
       return await this.usuarioService.findAll(typeof filtersUsuariosDTO.nombreUsuario === 'string' ? filtersUsuariosDTO.nombreUsuario : undefined,
-        filtersUsuariosDTO.rol)
+        filtersUsuariosDTO.rol, undefined, filtersUsuariosDTO.idSolicitante)
     } catch (error) {
       throw new RpcException({
         message: error.message,
@@ -39,7 +39,7 @@ export class UsuarioController {
   }
 
   @MessagePattern('getUsuario')
-  public async findOne(id: number) {
+  public async findOne(id: string) {
     try {
       return await this.usuarioService.findOne(id);
     } catch (error) {
@@ -51,7 +51,7 @@ export class UsuarioController {
   }
 
   @MessagePattern('updateUser')
-  public async update(paylodad: { id: number, updateUsuarioDto: UpdateUsuarioDto }) {
+  public async update(paylodad: { id: string, updateUsuarioDto: UpdateUsuarioDto }) {
     try {
       await this.usuarioService.update(paylodad.id, paylodad.updateUsuarioDto)
       return { success: true }
@@ -64,7 +64,7 @@ export class UsuarioController {
   }
 
   @MessagePattern('deleteUser')
-  public async delete(id: number) {
+  public async delete(id: string) {
     try {
       await this.usuarioService.delete(id)
       return { success: true }

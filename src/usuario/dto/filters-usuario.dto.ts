@@ -1,15 +1,17 @@
 import { RolEnum } from "../entities/usuario.schema"
 
 export class FiltersUsuarioDTO {
-    id?: number
+    _id?: string
     nombreUsuario?: String | { $regex: string, $options: string }
     email?: String
     rol?: RolEnum
+    idSolicitante?: String
 
-    constructor(id?: number, nombreUsuario?: String | { $regex: string, $options: string }, email?: String, rol?: RolEnum) {
-        this.id = id
+    constructor(id?: string, nombreUsuario?: String | { $regex: string, $options: string }, email?: String, rol?: RolEnum, idSolicitante?: String) {
+        this._id = id
         this.nombreUsuario = nombreUsuario
         this.email = email
         this.rol = rol
+        this.idSolicitante = idSolicitante
     }
 }

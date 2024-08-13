@@ -14,8 +14,6 @@ export enum RolEnum {
 @Schema()
 export class Usuario {
     @Prop()
-    id: number
-    @Prop()
     nombreUsuario: String
     @Prop()
     @Exclude()

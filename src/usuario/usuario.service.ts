@@ -5,8 +5,9 @@ import { RolEnum, Usuario } from './entities/usuario.schema';
 
 import * as bcrypt from 'bcrypt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Document, Model, Types } from 'mongoose';
 import { FiltersUsuarioDTO } from './dto/filters-usuario.dto';
+import { UsuarioSerializable } from './dto/usuario.serializable';
 @Injectable()
 export class UsuarioService {
   constructor(@InjectModel(Usuario.name) private usuariosModel: Model<Usuario>) { }
@@ -22,19 +23,30 @@ export class UsuarioService {
     if (await this.findOne(undefined, createUsuarioDto.nombreUsuario))
       throw new HttpException("Ya el nombre usuario está siendo usado", HttpStatus.BAD_REQUEST)
 
-     await usuario.save() // se almacena al usuario en la base de datos
+    await usuario.save() // se almacena al usuario en la base de datos
   }
 
-  public async findAll(nombre?: String, rol?: RolEnum, email?: String): Promise<Array<Usuario>> {
+  public async findAll(nombre?: String, rol?: RolEnum, email?: String, idSolicitante?: String): Promise<Array<UsuarioSerializable>> {
+    const usuariosSerializables: Array<UsuarioSerializable> = new Array<UsuarioSerializable>()
     // Construir el objeto de filtro dinámicamente y eliminar propiedades undefined
     // se construyen los filtros de los usuarios
     const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(undefined, nombre ? { $regex: nombre.toString(), $options: 'i' } : undefined, email, rol)
     Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]); // se eliminan los valores undefined de los filtros
 
-    return await this.usuariosModel.find(filters).exec();
+    // se obtiene la list ade usuarios
+    const usuarios = await this.usuariosModel.find(filters).exec();
+    // se crean objetos serializables para los usuario y se filtra el id del solicitante
+    usuarios.forEach((usuario) => {
+      // si el filtro de "idSolicitante" no tiene valor o si el id del solicitante es distinto del is del usuario a serializar si no es distinto, entonces no se incluye en la serialización
+      if (!idSolicitante || usuario._id.toString() !== idSolicitante)
+        usuariosSerializables.push(new UsuarioSerializable(usuario._id.toString(), usuario.nombreUsuario, usuario.email, usuario.rol))
+    })
+    return usuariosSerializables
   }
 
-  public async findOne(id: number, nombre?: String, rol?: RolEnum, email?: String): Promise<Usuario> {
+  public async findOne(id: string, nombre?: String, rol?: RolEnum, email?: String): Promise<Document<unknown, {}, Usuario> & Usuario & {
+    _id: Types.ObjectId;
+  }> {
     // Construir el objeto de filtro dinámicamente y eliminar propiedades undefined
     // se construyen los filtros de los usuarios
     const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(id, nombre ? { $regex: nombre.toString(), $options: 'i' } : undefined, email, rol)
@@ -44,12 +56,28 @@ export class UsuarioService {
   }
 
   // Método para actualizar la información de un usuario
-  public async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
-    await this.usuariosModel.updateOne({ id: id }, updateUsuarioDto).exec()
+  public async update(id: string, updateUsuarioDto: UpdateUsuarioDto) {
+    // se encuentra al usuario con ese id
+    const usuario = await this.findOne(id)
+    if (usuario) { // si fue encontrado un usuario con ese id
+      // se actualizan los campos del usuario
+
+      if (updateUsuarioDto.nombreUsuario) // si fue proporcionado un nombre de usuario nuevo
+        usuario.nombreUsuario = updateUsuarioDto.nombreUsuario
+      if (updateUsuarioDto.contrasena) // si fue proporcionada una contraseña nueva
+        usuario.contrasena = updateUsuarioDto.contrasena
+      if (updateUsuarioDto.rol) // si fue proporcionado un rol nuevo
+        usuario.rol = updateUsuarioDto.rol
+
+      await usuario.save() // se guardan los cambios en la base de datos
+    }
+    else
+      throw new HttpException("No existe un usuario con ese id", HttpStatus.BAD_REQUEST)
+
   }
 
   // Método para eliminar un usuario en específico
-  public async delete(id: number) {
-    await this.usuariosModel.deleteOne({ id: id }).exec()
+  public async delete(id: string) {
+    await this.usuariosModel.deleteOne({ _id: id }).exec()
   }
 }

@@ -13,10 +13,10 @@ export class AuthService {
 
     // Metodo para logear un usuario en el sistema
     public async login(loginDTO: LoginDTO) {
-        const userEntity: Usuario | undefined = await this.userService.findOne(undefined, loginDTO.nombreUsuario) // se obtiene la usuario por su nombre de usuario
+        const userEntity = await this.userService.findOne(undefined, loginDTO.nombreUsuario) // se obtiene la usuario por su nombre de usuario
         let res: {
             token: string, payload: {
-                userId: number,
+                userId: string,
                 rol: RolEnum
             }
         } | undefined = undefined
@@ -26,7 +26,7 @@ export class AuthService {
             if (await bcrypt.compare(loginDTO.contrasena, userEntity.contrasena.toString())) { // si la contraseña es correcta
                 if (userEntity.rol) { // si fue asignado un rol al usuario
                     // se crea un payload esto es la información adicional que va a hacer almacenada como parte del token generado
-                    const payload = { userId: userEntity.id, rol: userEntity.rol }
+                    const payload = { userId: userEntity._id.toString(), rol: userEntity.rol }
                     // se crea el token
                     const token = await this.jwtService.signAsync(payload) // se crea un token con la información del payload
                     res = { token: token, payload } // se retorna el token junto con el id del usuario
