@@ -28,7 +28,7 @@ export class UsuarioController {
   @MessagePattern('getAllUsers')
   public async findAll(filtersUsuariosDTO: FiltersUsuarioDTO) {
     try {
-      return await this.usuarioService.findAll(typeof filtersUsuariosDTO.nombreUsuario === 'string' ? filtersUsuariosDTO.nombreUsuario : undefined,
+      return await this.usuarioService.findAll(filtersUsuariosDTO.nombreUsuario as String,
         filtersUsuariosDTO.rol, undefined, filtersUsuariosDTO.idSolicitante)
     } catch (error) {
       throw new RpcException({
@@ -41,7 +41,7 @@ export class UsuarioController {
   @MessagePattern('getUsuario')
   public async findOne(id: string) {
     try {
-      return await this.usuarioService.findOne(id);
+      return await this.usuarioService.getProfileUser(id);
     } catch (error) {
       throw new RpcException({
         message: error.message,

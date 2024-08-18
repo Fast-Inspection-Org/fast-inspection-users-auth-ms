@@ -49,10 +49,20 @@ export class UsuarioService {
   }> {
     // Construir el objeto de filtro dinámicamente y eliminar propiedades undefined
     // se construyen los filtros de los usuarios
-    const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(id, nombre ? { $regex: nombre.toString(), $options: 'i' } : undefined, email, rol)
+    const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(id, nombre, email, rol)
     Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]); // se eliminan los valores undefined de los filtros
 
     return await this.usuariosModel.findOne(filters).exec()
+  }
+
+  public async getProfileUser(id: string): Promise<UsuarioSerializable> {
+    const usuario = await this.usuariosModel.findById(id) // se obtiene la infomración del usuario con ese id
+
+    // si fue encontrado un usuario con ese id
+    if (usuario)
+      return new UsuarioSerializable(usuario._id.toString(), usuario.nombreUsuario, usuario.email, usuario.rol)
+    else
+      throw new HttpException("No existe un usuario con ese id", HttpStatus.BAD_REQUEST)
   }
 
   // Método para actualizar la información de un usuario
@@ -61,9 +71,15 @@ export class UsuarioService {
     const usuario = await this.findOne(id)
     if (usuario) { // si fue encontrado un usuario con ese id
       // se actualizan los campos del usuario
-
-      if (updateUsuarioDto.nombreUsuario) // si fue proporcionado un nombre de usuario nuevo
-        usuario.nombreUsuario = updateUsuarioDto.nombreUsuario
+      if (updateUsuarioDto.nombreUsuario) { // si fue proporcionado un nombre de usuario nuevo
+        // se comprueba que no existe un usuario con el mismo nombre de usuario
+        const usuarioExistente = await this.findOne(undefined, updateUsuarioDto.nombreUsuario)
+        // si no existe un usuario con es nombre de usuario o si el que existe es el mismo
+        if (!usuarioExistente || usuarioExistente._id.toString() === id)
+          usuario.nombreUsuario = updateUsuarioDto.nombreUsuario
+        else
+          throw new HttpException("Ya el nombre usuario está siendo usado", HttpStatus.BAD_REQUEST)
+      }
       if (updateUsuarioDto.contrasena) // si fue proporcionada una contraseña nueva
         usuario.contrasena = updateUsuarioDto.contrasena
       if (updateUsuarioDto.rol) // si fue proporcionado un rol nuevo

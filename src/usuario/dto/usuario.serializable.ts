@@ -6,6 +6,7 @@ export class UsuarioSerializable {
     email: String
     rol: RolEnum
 
+
     constructor(id: string, nombreUsuario: String, email: String, rol: RolEnum) {
         this.id = id
         this.nombreUsuario = nombreUsuario
