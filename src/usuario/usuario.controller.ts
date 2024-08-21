@@ -38,7 +38,7 @@ export class UsuarioController {
     }
   }
 
-  @MessagePattern('getUsuario')
+  @MessagePattern('getUsuarioById')
   public async findOne(id: string) {
     try {
       return await this.usuarioService.getProfileUser(id);

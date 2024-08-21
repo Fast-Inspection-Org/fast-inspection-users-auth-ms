@@ -5,4 +5,5 @@ export class CreateUsuarioDto {
     contrasena: string
     email: string
     rol?: RolEnum
+    isActiva?: boolean
 }

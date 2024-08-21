@@ -15,6 +15,8 @@ export class UsuarioService {
   public async create(createUsuarioDto: CreateUsuarioDto) {
     // se encripta la contraseña
     createUsuarioDto.contrasena = await bcrypt.hash(createUsuarioDto.contrasena, 10)
+    // por defecto la cuenta del usuario se marca como "no activa"
+    createUsuarioDto.isActiva = false
     const usuario = new this.usuariosModel(createUsuarioDto) // se crea un usuario  basado en la información del usuario dto
     // se verifica que no exista un usuario con el mismo nombre o email
 

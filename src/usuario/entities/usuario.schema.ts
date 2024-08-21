@@ -23,6 +23,8 @@ export class Usuario {
     email: String
     @Prop()
     rol: RolEnum
+    @Prop()
+    isActiva: boolean // define si la cuenta ha sido activada o no
 }
 
 export const UsuarioSchema = SchemaFactory.createForClass(Usuario)
