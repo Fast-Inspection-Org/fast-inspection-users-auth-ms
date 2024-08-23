@@ -39,9 +39,22 @@ export class UsuarioController {
   }
 
   @MessagePattern('getUsuarioById')
-  public async findOne(id: string) {
+  public async findOneById(id: string) {
     try {
       return await this.usuarioService.getProfileUser(id);
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
+  }
+
+  @MessagePattern('getUsuario')
+  public async findOne(filtersUsuarioDTO: FiltersUsuarioDTO) {
+    try {
+      return await this.usuarioService.findOneSerializable(filtersUsuarioDTO._id, filtersUsuarioDTO.nombreUsuario as String,
+        filtersUsuarioDTO.rol, filtersUsuarioDTO.email)
     } catch (error) {
       throw new RpcException({
         message: error.message,

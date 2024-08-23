@@ -12,6 +12,8 @@ import { MailerService } from 'src/mailer/mailer.service';
 import { SendEmailDTO } from 'src/mailer/send-email.dto';
 import { codigoActivacionHTML } from 'src/plantillas/codigo-activacion-html';
 import { CreateCodigoActivacionDTO } from 'src/codigo-activacion/dto/create-codigo-activacion.dto';
+import { codigoVerificacionIdentidadHTML } from 'src/plantillas/codigo-verificacion-identidad-html';
+import { UpdateUsuarioDto } from 'src/usuario/dto/update-usuario.dto';
 @Injectable()
 export class AuthService {
     constructor(private userService: UsuarioService,
@@ -78,32 +80,62 @@ export class AuthService {
 
         // si fue encontrado el usuario
         if (usuario) {
-            // se encuentra el código de activación del usuario
-            const codigoActivacionSchema = await this.codigoActivacionService.findOne(undefined, idUsuario, codigoActivacion)
             // si fue el código de activación es correcto (o sea fue encontrado un código de activación con esos datos)
-            if (codigoActivacionSchema) {
-                // si el código de activación no ha expirado
-                if (new Date().getTime() - codigoActivacionSchema.createAt.getTime() < parseInt(envs.EXPIRATION_TIME)) {
-                    // se activa la cuenta del usuario
-                    usuario.isActiva = true
-                    // se actualizan los datos en la base de datos
-                    await usuario.save()
-                    // se elimina el codigo de activación (opcional ya que cuando se ejecute el escaneo diario cada cierto número de días serán eliminados todos los código obsoletos)
-                }
-                else
-                    throw new HttpException("Este código de activación a expirado", HttpStatus.BAD_REQUEST) // se lanza la exeption y se detiene la ejecución del método
-            }
-            else
-                throw new HttpException("Código de Activación incorrecto", HttpStatus.BAD_REQUEST) // se lanza la exeption y se detiene la ejecución del método
+            await this.verificarCodigoIdentidad(idUsuario, codigoActivacion) // si el método no lanza ninguna exeption, significa que el código de activacion es valido
+            // se activa la cuenta del usuario
+            usuario.isActiva = true
+            // se actualizan los datos en la base de datos
+            await usuario.save()
+            // se elimina el codigo de activación (opcional ya que cuando se ejecute el escaneo diario cada cierto número de días serán eliminados todos los código obsoletos)
         }
         else
             throw new HttpException("No existe un usuario con ese identificador", HttpStatus.BAD_REQUEST) // se lanza la exeption y se detiene la ejecución del método
 
     }
 
+    // Método para verificar que un código de identidad sea válido
+    public async verificarCodigoIdentidad(idUsuario: string, codigoIdentidad: string) {
+        await this.codigoActivacionService.verificarCodigoIdentidad(idUsuario, codigoIdentidad) // si el método no lanza ninguna exeption, significa que el código de activacion es valido
+    }
+
     // Metodo para registrar un usuario en el sistema
     public async registrer(userDTO: CreateUsuarioDto) {
         return await this.userService.create(userDTO) // Se manda a registrar al usuario en la base de datos al servicio de usuarios
+    }
+
+    // Método para cambiar la contraseña de un Usuario en específico
+    public async cambiarContrasena(idUsuario: string, newContrasena: string, contrasenaAnterior?: string) {
+        // si se optó por el método de verificación de contraseña
+        // se verifica antes que la contraseña anterior pertenezca realmente al usuario
+        // (Para ello, el método "verificarContraseñaUsuario" debe retornar false )
+        if (contrasenaAnterior && !(await this.userService.verificarContraseñaUsuario(contrasenaAnterior, idUsuario)))
+            throw new HttpException("La contraseña anterior es incorrecta", HttpStatus.BAD_REQUEST) // se lanza la exeption y se detiene la ejecución del método
+        await this.userService.update(idUsuario, new UpdateUsuarioDto(undefined, newContrasena, undefined) /* solo se modifca la contraseña */)
+    }
+
+    // Método para enviar un correo de verificación de identidad 
+    public async enviarCorreoVerificacionIdentidad(idUsuario: string /* representa el identificador del usuario al cual se le va a mandar el correo */) {
+        // se obtiene el usuario con ese identificador
+        const usuario = await this.userService.findOne(idUsuario)
+
+        // si fue encontrado un usuario con ese id
+        if (usuario) {
+            // se manda un correo con el código de verificación de identidad a ese usuario
+            const codigoActivacion: string = this.generarCodigoActivacion(6).toString()
+
+            await this.mailerService.sendEmail(new SendEmailDTO([{
+                name: usuario.nombreUsuario.toString(),
+                address: usuario.email.toString()
+            }], "Código de Verificación", "Le damos la Bienvenida a los Servicios de Fast-Inspection", codigoVerificacionIdentidadHTML(envs.NAME_APP, codigoActivacion,
+                usuario.nombreUsuario.toString(), envs.EMAIL_APP), {
+                name: envs.NAME_APP,
+                address: envs.EMAIL_APP
+            }))
+            // además se registra el código de activación en la base de datos
+            await this.codigoActivacionService.createCodigoActivacion(new CreateCodigoActivacionDTO(usuario._id.toString(), codigoActivacion, new Date()))
+        }
+        else
+            throw new HttpException("No existe un usuario con ese identificador", HttpStatus.BAD_REQUEST) // se lanza la exeption y se detiene la ejecución del método
     }
 
     // Método para generar un código de activicación de cuenta

@@ -22,13 +22,49 @@ export class AuthController {
     }
   }
 
-
-
-
   @MessagePattern('registrer')
   public async registrer(userDTO: CreateUsuarioDto) {
     try {
       await this.authService.registrer(userDTO)
+      return { success: true }
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
+  }
+
+  @MessagePattern('cambiarContrasena')
+  public async cambiarContrasena(payload: { idUsuario: string, newContrasena: string, contrasenaAnterior?: string }) {
+    try {
+      await this.authService.cambiarContrasena(payload.idUsuario, payload.newContrasena, payload.contrasenaAnterior)
+      return { success: true }
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
+  }
+
+  @MessagePattern('enviarCodigoVerificacionIdentidad')
+  public async enviarCodigoVerificacionIdentidad(idUsuario: string) {
+    try {
+      await this.authService.enviarCorreoVerificacionIdentidad(idUsuario)
+      return { success: true }
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: error.status
+      })
+    }
+  }
+
+  @MessagePattern('verificarCodigoIdentidad')
+  public async verificarCodigoIdentidad(activacionDTO: ActivacionDTO) {
+    try {
+      await this.authService.verificarCodigoIdentidad(activacionDTO.idUsuario, activacionDTO.codigoActivacion)
       return { success: true }
     } catch (error) {
       throw new RpcException({

@@ -40,7 +40,8 @@ export class UsuarioService {
     // se crean objetos serializables para los usuario y se filtra el id del solicitante
     usuarios.forEach((usuario) => {
       // si el filtro de "idSolicitante" no tiene valor o si el id del solicitante es distinto del is del usuario a serializar si no es distinto, entonces no se incluye en la serialización
-      if (!idSolicitante || usuario._id.toString() !== idSolicitante)
+      // y el rol del usuario sea distinto de "Súper Administrador" ya que el usuario del Súper Administrador no debe de ser expuesto
+      if ((!idSolicitante || usuario._id.toString() !== idSolicitante) && usuario.rol !== RolEnum.SuperAdministrador)
         usuariosSerializables.push(new UsuarioSerializable(usuario._id.toString(), usuario.nombreUsuario, usuario.email, usuario.rol))
     })
     return usuariosSerializables
@@ -55,6 +56,21 @@ export class UsuarioService {
     Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]); // se eliminan los valores undefined de los filtros
 
     return await this.usuariosModel.findOne(filters).exec()
+  }
+
+  public async findOneSerializable(id: string, nombre?: String, rol?: RolEnum, email?: String): Promise<UsuarioSerializable> {
+    // Construir el objeto de filtro dinámicamente y eliminar propiedades undefined
+    // se construyen los filtros de los usuarios
+    const filters: FiltersUsuarioDTO = new FiltersUsuarioDTO(id, nombre, email, rol)
+    Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]); // se eliminan los valores undefined de los filtros
+
+    // se obitene el usuario de la base de datos
+    const usuario = await this.usuariosModel.findOne(filters).exec()
+    // si fue encontrado el usuario
+    if (usuario)
+      return new UsuarioSerializable(usuario._id.toString(), usuario.nombreUsuario, usuario.email, usuario.rol)
+    else
+      throw new HttpException("No existe esta cuenta", HttpStatus.BAD_REQUEST)
   }
 
   public async getProfileUser(id: string): Promise<UsuarioSerializable> {
@@ -82,8 +98,11 @@ export class UsuarioService {
         else
           throw new HttpException("Ya el nombre usuario está siendo usado", HttpStatus.BAD_REQUEST)
       }
-      if (updateUsuarioDto.contrasena) // si fue proporcionada una contraseña nueva
-        usuario.contrasena = updateUsuarioDto.contrasena
+      if (updateUsuarioDto.contrasena) { // si fue proporcionada una contraseña nueva
+        // se encripta la contraseña antes de asignarla
+        usuario.contrasena = await bcrypt.hash(updateUsuarioDto.contrasena, 10)
+      }
+
       if (updateUsuarioDto.rol) // si fue proporcionado un rol nuevo
         usuario.rol = updateUsuarioDto.rol
 
@@ -92,6 +111,24 @@ export class UsuarioService {
     else
       throw new HttpException("No existe un usuario con ese id", HttpStatus.BAD_REQUEST)
 
+  }
+
+  // Método para verificar si una contraseña pertenece o no a un usuario en específico
+  public async verificarContraseñaUsuario(contrasena: string, idUsuario: string): Promise<boolean> {
+    // se busca primero al usuario
+    let isContrasenaPerteneceUsuario = false
+    const usuario = await this.findOne(idUsuario)
+
+    // si fue entontrado a un usuario con ese id
+    if (usuario) {
+      // se realiza la comprobación de la contraseña
+      if (await bcrypt.compare(contrasena, usuario.contrasena.toString())) // si las contraseñas son iguales
+        isContrasenaPerteneceUsuario = true // se indica que la contraseña si pertenece al usuario
+    }
+    else
+      throw new HttpException("No existe un usuario con ese id", HttpStatus.BAD_REQUEST)
+
+    return isContrasenaPerteneceUsuario
   }
 
   // Método para eliminar un usuario en específico

@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCodigoActivacionDTO } from './dto/create-codigo-activacion.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { CodigoActivacion } from './schemas/codigo-activacion.schema';
 import { Model } from 'mongoose';
 import { FiltersCodigoActivacionDTO } from './dto/filters-codigo-activacion.dt';
+import { envs } from 'src/envs/envs';
 
 @Injectable()
 export class CodigoActivacionService {
@@ -25,6 +26,22 @@ export class CodigoActivacionService {
 
     public async deleteCodigoActivacion(idCodigoActivacion: string) {
         await this.codigoActivacionModel.deleteOne({ _id: idCodigoActivacion }).exec()
+    }
+
+    // Método para verificar el código de activación de un usuario
+    public async verificarCodigoIdentidad(idUsuario: string, codigoVerificacion: string) {
+        // se busca un código de verificación con ese código para ese usuario
+        const codigoVerificacionRegistro = await this.findOne(undefined, idUsuario, codigoVerificacion)
+
+        // si no fue encontrado código de verificación
+        if (!codigoVerificacionRegistro)
+            throw new HttpException("Código de Activación incorrecto", HttpStatus.BAD_REQUEST) // se lanza la exeption y se detiene la ejecución del método
+
+        // si el código de verificación expiró
+        if (new Date().getTime() - codigoVerificacionRegistro.createAt.getTime() >= parseInt(envs.EXPIRATION_TIME))
+            throw new HttpException("Este código de activación a expirado", HttpStatus.BAD_REQUEST) // se lanza la exeption y se detiene la ejecución del método
+
+        // si no sucede nada de lo anterior, el código de verificación es válido
     }
 
 }
