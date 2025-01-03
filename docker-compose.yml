@@ -1,0 +1,53 @@
+services:
+  fast_inspection_users_auth_ms:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-3002}
+      HOST: ${HOST:-fast_inspection_users_auth_ms}
+      NAME_DB: ${NAME_DB:-building_controller_db}
+      DB_HOST: ${DB_HOST:-fast_inspection_users_auth_db_server}
+      DB_PORT: ${DB_PORT:-27018}
+      DB_USERNAME: ${DB_USERNAME:-adrian}
+      DB_PASSWORD: ${DB_PASSWORD:-12345678}
+      SECRET_WORD: ${SECRET_WORD:-Its become}
+      MAIL_HOST: ${MAIL_HOST:-sandbox.smtp.mailtrap.io}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER:-de15df01f0a1fa}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-5c4c96b89ff5d3}
+      NAME_APP: ${NAME_APP:-Fast-Inspection}
+      EMAIL_APP: ${EMAIL_APP:-fast.inspection@gmail.com}
+      EXPIRATION_TIME: ${EXPIRATION_TIME:-600000}
+
+    ports:
+      - "${PORT:-3002}:${PORT:-3002}"
+    depends_on:
+      - fast_inspection_users_auth_db_server
+
+    networks:
+      - fast_inspection_network
+
+  fast_inspection_users_auth_db_server:
+    image: mongo
+    container_name: fast_inspection_users_auth_db_server
+    ports:
+      - ${DB_PORT:-27018}:${DB_PORT:-27018}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME:-adrian}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD:-12345678}
+    volumes:
+      - fast_inspection_users_auth_db_server_data:/data/db
+
+    networks:
+      - fast_inspection_network
+
+volumes:
+  fast_inspection_users_auth_db_server_data:
+
+
+networks:
+  fast_inspection_network:
+    name: fast_inspection_network
+
