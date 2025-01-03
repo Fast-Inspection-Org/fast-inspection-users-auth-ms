@@ -7,7 +7,7 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${PORT:-3002}
       HOST: ${HOST:-fast_inspection_users_auth_ms}
-      NAME_DB: ${NAME_DB:-building_controller_db}
+      DB_NAME: ${DB_NAME:-user_auth_db}
       DB_HOST: ${DB_HOST:-fast_inspection_users_auth_db_server}
       DB_PORT: ${DB_PORT:-27018}
       DB_USERNAME: ${DB_USERNAME:-adrian}
@@ -32,6 +32,7 @@ services:
   fast_inspection_users_auth_db_server:
     image: mongo
     container_name: fast_inspection_users_auth_db_server
+    command: ["mongod", "--port", "27018"]
     ports:
       - ${DB_PORT:-27018}:${DB_PORT:-27018}
     environment:
