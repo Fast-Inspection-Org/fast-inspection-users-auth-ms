@@ -9,8 +9,16 @@ import { MailerModule } from './mailer/mailer.module';
 import { CodigoActivacionModule } from './codigo-activacion/codigo-activacion.module';
 
 @Module({
-  imports: [UsuarioModule, AuthModule, MongooseModule.forRoot(`mongodb://localhost/${envs.NAME_DB}`), MailerModule, CodigoActivacionModule],
+  imports: [
+    UsuarioModule,
+    AuthModule,
+    MongooseModule.forRoot(
+      `mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=admin`,
+    ),
+    MailerModule,
+    CodigoActivacionModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
