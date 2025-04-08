@@ -14,6 +14,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Document, Model, Types } from 'mongoose';
 import { FiltersUsuarioDTO } from './dto/filters-usuario.dto';
 import { UsuarioSerializable } from './dto/usuario.serializable';
+import { ApiPaginatedResponse } from 'src/utils/api-paginated-response';
 @Injectable()
 export class UsuarioService {
   constructor(
@@ -58,7 +59,7 @@ export class UsuarioService {
     rol?: RolEnum,
     email?: String,
     idSolicitante?: String,
-  ): Promise<Array<UsuarioSerializable>> {
+  ): Promise<ApiPaginatedResponse<UsuarioSerializable[]>> {
     const usuariosSerializables: Array<UsuarioSerializable> =
       new Array<UsuarioSerializable>();
     // Construir el objeto de filtro dinámicamente y eliminar propiedades undefined
@@ -93,7 +94,7 @@ export class UsuarioService {
           ),
         );
     });
-    return usuariosSerializables;
+    return { data: usuariosSerializables };
   }
 
   public async findOne(
@@ -149,7 +150,7 @@ export class UsuarioService {
         usuario.nombreUsuario,
         usuario.email,
         usuario.rol,
-        usuario.isActiva
+        usuario.isActiva,
       );
     else
       throw new HttpException('No existe esta cuenta', HttpStatus.BAD_REQUEST);
@@ -165,7 +166,7 @@ export class UsuarioService {
         usuario.nombreUsuario,
         usuario.email,
         usuario.rol,
-        usuario.isActiva
+        usuario.isActiva,
       );
     else
       throw new HttpException(
