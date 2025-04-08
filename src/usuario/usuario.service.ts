@@ -149,6 +149,7 @@ export class UsuarioService {
         usuario.nombreUsuario,
         usuario.email,
         usuario.rol,
+        usuario.isActiva
       );
     else
       throw new HttpException('No existe esta cuenta', HttpStatus.BAD_REQUEST);
@@ -164,6 +165,7 @@ export class UsuarioService {
         usuario.nombreUsuario,
         usuario.email,
         usuario.rol,
+        usuario.isActiva
       );
     else
       throw new HttpException(
