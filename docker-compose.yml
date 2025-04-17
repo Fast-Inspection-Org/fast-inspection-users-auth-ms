@@ -8,7 +8,7 @@ services:
       PORT: ${PORT:-3002}
       HOST: ${HOST:-fast_inspection_users_auth_ms}
       DB_NAME: ${DB_NAME:-user_auth_db}
-      DB_HOST: ${DB_HOST:-fast_inspection_users_auth_db_server}
+      DB_HOST: ${DB_HOST:-fast_inspection_mongo_db_server}
       DB_PORT: ${DB_PORT:-27018}
       DB_USERNAME: ${DB_USERNAME:-adrian}
       DB_PASSWORD: ${DB_PASSWORD:-12345678}
@@ -24,30 +24,12 @@ services:
     ports:
       - "${PORT:-3002}:${PORT:-3002}"
     depends_on:
-      - fast_inspection_users_auth_db_server
+      - fast_inspection_mongo_db_server
 
     networks:
       - fast_inspection_network
 
-  fast_inspection_users_auth_db_server:
-    image: mongo
-    container_name: fast_inspection_users_auth_db_server
-    command: ["mongod", "--port", "27018"]
-    ports:
-      - ${DB_PORT:-27018}:${DB_PORT:-27018}
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME:-adrian}
-      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD:-12345678}
-    volumes:
-      - fast_inspection_users_auth_db_server_data:/data/db
-
-    networks:
-      - fast_inspection_network
-
-volumes:
-  fast_inspection_users_auth_db_server_data:
-
-
+  
 networks:
   fast_inspection_network:
     name: fast_inspection_network
