@@ -23,9 +23,6 @@ services:
 
     ports:
       - "${PORT:-3002}:${PORT:-3002}"
-    depends_on:
-      - fast_inspection_mongo_db_server
-
     networks:
       - fast_inspection_network
 
