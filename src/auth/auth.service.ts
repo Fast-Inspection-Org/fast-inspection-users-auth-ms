@@ -26,7 +26,7 @@ export class AuthService {
     public async login(loginDTO: LoginDTO) { // retorna el token o en caso de no esta activada la cuenta retorna el identificador del usuario
         const userEntity = await this.userService.findOne(undefined, loginDTO.nombreUsuario) // se obtiene la usuario por su nombre de usuario
         let res: {
-            token: string, payload: {
+            accessToken: string, payload: {
                 userId: string,
                 rol: RolEnum
             }
@@ -42,7 +42,7 @@ export class AuthService {
                         const payload = { userId: userEntity._id.toString(), rol: userEntity.rol }
                         // se crea el token
                         const token = await this.jwtService.signAsync(payload) // se crea un token con la información del payload
-                        res = { token: token, payload } // se retorna el token junto con el id del usuario
+                        res = { accessToken: token, payload } // se retorna el token junto con el id del usuario
                     }
                     else
                         throw new HttpException("No se le ha asignado un rol al usuario", HttpStatus.BAD_REQUEST) // se lanza la exeption y se detiene la ejecución del método
