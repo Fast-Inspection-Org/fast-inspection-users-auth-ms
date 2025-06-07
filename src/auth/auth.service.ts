@@ -27,7 +27,7 @@ export class AuthService {
         const userEntity = await this.userService.findOne(undefined, loginDTO.nombreUsuario) // se obtiene la usuario por su nombre de usuario
         let res: {
             accessToken: string, payload: {
-                userId: string,
+                id: string,
                 rol: RolEnum
             }
         } | undefined = undefined
@@ -39,7 +39,7 @@ export class AuthService {
                 if (userEntity.isActiva) {
                     if (userEntity.rol) { // si fue asignado un rol al usuario
                         // se crea un payload esto es la información adicional que va a hacer almacenada como parte del token generado
-                        const payload = { userId: userEntity._id.toString(), rol: userEntity.rol }
+                        const payload = { id: userEntity._id.toString(), rol: userEntity.rol }
                         // se crea el token
                         const token = await this.jwtService.signAsync(payload) // se crea un token con la información del payload
                         res = { accessToken: token, payload } // se retorna el token junto con el id del usuario
